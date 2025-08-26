@@ -64,7 +64,12 @@ export default function DetailsScreen() {
 
   const MovieStats = ({ label, value }: { label: string, value: string }) => (
     <View style={{
-      alignItems: "center"
+      flex: 1,
+      margin: 10,
+      alignItems: "center",
+      padding: 5,
+      borderRadius: 8,
+      backgroundColor: "#e3e3e3"
     }}>
       <Text style={{ fontSize: 12 }}>{label}</Text>
       <Text style={{ fontWeight: "bold", fontSize: 16 }}>{value}</Text>
@@ -75,6 +80,7 @@ export default function DetailsScreen() {
     <View style={{
       alignItems: "flex-start",
       marginHorizontal: 20,
+      marginBottom: 8
     }}>
       <Text style={{ fontSize: 12, color: "grey" }}>{label}</Text>
       <Text style={{ fontSize: 14 }}>{value}</Text>
@@ -107,7 +113,7 @@ export default function DetailsScreen() {
             <Text style={[styles.textSubTitle, { color: "black", marginTop: 10 }]}>{movie.Plot}</Text>
           </View>
           <View style={{
-            marginHorizontal: 50,
+            marginHorizontal: 20,
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
@@ -118,7 +124,9 @@ export default function DetailsScreen() {
             <MovieStats label="Votes" value={movie.imdbVotes} />
           </View>
           <MovieCast label="Director" value={movie.Director}></MovieCast>
-          <MovieCast label="Cast" value={movie.Actors}></MovieCast>
+          <MovieCast label="Writer" value={movie.Writer}></MovieCast>
+          <MovieCast label="Actors" value={movie.Actors}></MovieCast>
+        
         </View>
       )}
     </ScrollView>
