@@ -5,17 +5,23 @@ const { omdbApiKey } = Constants.expoConfig?.extra ?? {};
 
 const API_KEY = omdbApiKey;
 
-export async function onRequestMovieList(searchValue: string, year: number, pageNumber: number): Promise<OmdbResponse | null> {
+export async function onRequestMovieList(searchValue: string, year: number, type: string, pageNumber: number): Promise<OmdbResponse | null> {
     if (!searchValue && year == 0) return null;
+
+    console.log("tyoes", type);
 
     let yearParam = ``;
     if (year != null || year != 0) {
         yearParam = `&y=${year}`;
     }
+    let typeParam = ``;
+    if (type != null || type != "") {
+        typeParam = `&type=${type}`;
+    }
 
     try {
         const response = await fetch(
-            `http://www.omdbapi.com/?s=${searchValue}${yearParam}&page=${pageNumber}&apikey=${API_KEY}`
+            `http://www.omdbapi.com/?s=${searchValue}${yearParam}${typeParam}&page=${pageNumber}&apikey=${API_KEY}`
         );
         const data: OmdbResponse = await response.json();
 

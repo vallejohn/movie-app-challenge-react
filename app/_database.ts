@@ -33,11 +33,9 @@ export async function getFavorites(): Promise<any[]> {
 
 
 export async function isMarkedFavorite(id: string): Promise<boolean> {
-  console.log('fetching 3::::::')
   const result = await db.getFirstAsync<{ id: string }>(
     'SELECT id FROM favorites WHERE id = ?',
     [id]
   );
-  console.log('fetching 4::::::')
   return !!result;
 }

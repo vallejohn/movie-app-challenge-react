@@ -25,13 +25,14 @@ export default function HomeScreen() {
   const [totalResults, setTotalResults] = useState(0);
   const [selectedYear, setYear] = useState(null);
   const [selectedSortingMethod, setSelectedSortingMethod] = useState("ASC");
+  const [selectedVideoType, setSelectedVideoType] = useState("Movie");
   const [sortType, setSortType] = useState("Title");
 
 
-  const fetchMovies = async (query: string, year: any, pageNumber: number) => {
+  const fetchMovies = async (query: string, year: any, type: string, pageNumber: number) => {
     setLoading(true);
 
-    let responseData = await onRequestMovieList(query, year, pageNumber);
+    let responseData = await onRequestMovieList(query, year, type, pageNumber);
 
     if (!responseData) {
       setMovies([]);
@@ -54,7 +55,7 @@ export default function HomeScreen() {
     const handler = setTimeout(() => {
       if (search.trim().length > 0) {
         setPage(1)
-        fetchMovies(search, selectedYear, 1);
+        fetchMovies(search, selectedYear, selectedVideoType, 1);
       } else {
         setLoading(false)
         setMovies([])
@@ -70,14 +71,20 @@ export default function HomeScreen() {
     if (movies.length < totalResults && !loading) {
       const nextPage = page + 1;
       setPage(nextPage);
-      fetchMovies(search, selectedYear, nextPage)
+      fetchMovies(search, selectedYear, selectedVideoType, nextPage)
     }
   };
 
   const onUpdateYear = (item: any) => {
     setYear(item.value)
     setPage(1);
-    fetchMovies(search, item.value, 1)
+    fetchMovies(search, item.value, selectedVideoType, 1)
+  }
+
+  const onUpdateVideoType = (item: any) => {
+    setSelectedVideoType(item.value)
+    setPage(1);
+    fetchMovies(search, selectedYear, item.value, 1)
   }
 
   const onSortList = (method: string, type: string) => {
@@ -114,8 +121,10 @@ export default function HomeScreen() {
       placeholder={placeholder}
       value={value}
       onChange={onChange}
-      selectedTextStyle={{ fontSize: 14, }}
-      itemTextStyle={{ fontSize: 14, }}
+      selectedTextStyle={{ fontSize: 12, }}
+      itemTextStyle={{ fontSize: 12, color: "black"}}
+      placeholderStyle={{ fontSize: 14, }}
+      itemContainerStyle={{justifyContent: "center", }}
     />
   );
 
@@ -136,13 +145,14 @@ export default function HomeScreen() {
 
   const sortingMethod = ["ASC", "DESC"].map((item) => ({ label: item, value: item }));
   const sortingType = ["Year", "Title"].map((item) => ({ label: item, value: item }));
+  const videoType = ["Movie", "Series"].map((item) => ({ label: item, value: item }));
 
   function emptyListMessage() {
     if (search != "" && movies.length == 0) {
       return "No results";
     } else if (search == "" && movies.length == 0) {
       return "Search movies";
-    }else{
+    } else {
       return "";
     }
   }
@@ -171,6 +181,12 @@ export default function HomeScreen() {
           onChange={(item) => { onUpdateYear(item) }}
         />
         <FilterDropdown
+          data={videoType}
+          placeholder="Type"
+          value={selectedVideoType}
+          onChange={(item) => { onUpdateVideoType(item) }}
+        />
+        <FilterDropdown
           data={sortingMethod}
           placeholder="Sort"
           value={selectedSortingMethod}
@@ -183,7 +199,7 @@ export default function HomeScreen() {
           onChange={(item) => { onSortList(selectedSortingMethod, item.value) }}
         />
       </View>
-      {!loading && movies.length == 0? <View style={{ justifyContent: "center", alignItems: "center", height: 200 }}>
+      {!loading && movies.length == 0 ? <View style={{ justifyContent: "center", alignItems: "center", height: 200 }}>
         <Text style={[styles.title, { color: "#c9c9c9" }]}>{emptyListMessage()}</Text>
       </View> : null}
       <FlatList

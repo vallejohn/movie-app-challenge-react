@@ -12,7 +12,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   dropdown: {
-    height: 40,
+    height: 30,
     backgroundColor: "#dbdbdb",
     borderRadius: 8,
     marginBottom: 10,
