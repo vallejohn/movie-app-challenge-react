@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   detailsImage: {
-    height: 400,
+    aspectRatio: 9/16,
     justifyContent: "flex-end",
   },
     detailsOverlay: {

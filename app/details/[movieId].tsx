@@ -6,7 +6,7 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Dimensions, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { addFavorite, initDb, isMarkedFavorite, removeFavorite } from '../_database';
 import MovieDetails from "../models/movieDetails";
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 
 import { onRequestDetails } from "../apiClient";
 import styles from "../styles";
@@ -57,13 +57,13 @@ export default function DetailsScreen() {
   const MovieStats = ({ label, value }: { label: string, value: string }) => (
     <View style={{
       flex: 1,
-      margin: 10,
+      margin: 5,
       alignItems: "center",
       padding: 5,
       borderRadius: 8,
       backgroundColor: "#e3e3e3"
     }}>
-      <Text style={{ fontSize: 12 }}>{label}</Text>
+      <Text style={{ fontSize: 12, color: "grey" }}>{label}</Text>
       <Text style={{ fontWeight: "bold", fontSize: 16 }}>{value}</Text>
     </View>
   );
@@ -81,7 +81,7 @@ export default function DetailsScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.detailsContainer}>
-      {loading && <ActivityIndicator size="large" color="#0000ff" style={{alignSelf: "center"}}/>}
+      {loading && <ActivityIndicator size="large" color="#0000ff" style={{justifyContent: "center", alignItems: "center", height: height}}/>}
 
       {movie && (
         <View>
@@ -105,9 +105,8 @@ export default function DetailsScreen() {
             <Text style={[styles.textSubTitle, { color: "black", marginTop: 10 }]}>{movie.Plot}</Text>
           </View>
           <View style={{
-            marginHorizontal: 20,
             flexDirection: "row",
-            justifyContent: "space-between",
+            justifyContent: "flex-end",
             alignItems: "center",
             padding: 10,
           }}>
