@@ -3,17 +3,13 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Movie from "./models/movie";
 
-import Constants from "expo-constants";
 import { ImageBackground } from "expo-image";
 import { router } from "expo-router";
 import { Dropdown } from "react-native-element-dropdown";
 import { onRequestMovieList } from "./apiClient";
 import styles from "./styles";
-const { omdbApiKey } = Constants.expoConfig?.extra ?? {};
 
 const Stack = createNativeStackNavigator();
-
-const API_KEY = omdbApiKey;
 
 export default function HomeScreen() {
   const currentYear = new Date().getFullYear();
@@ -36,7 +32,6 @@ export default function HomeScreen() {
     setLoading(true);
 
     let responseData = await onRequestMovieList(query, year, pageNumber);
-    console.log('API Response', responseData);
 
     if (!responseData) {
       setMovies([]);
@@ -86,31 +81,23 @@ export default function HomeScreen() {
   }
 
   const onSortList = (method: string, type: string) => {
-    console.log("sorting", method);
-        console.log("type", type);
     setSortType(type);
     setSelectedSortingMethod(method);
 
     let sortedMovies: Movie[] = [];
 
     if (type == "Year") {
-      console.log("year?");
       if (method == "ASC") {
-        console.log("asc?");
         sortedMovies = movies.sort((a, b) => parseInt(a.Year) - parseInt(b.Year))
       } else {
-        console.log("desc");
         sortedMovies = movies.sort((a, b) => parseInt(b.Year) - parseInt(a.Year))
       }
     }
 
     if (type == "Title") {
-      console.log("title?");
       if (method == "ASC") {
-        console.log("asc?");
         sortedMovies = movies.sort((a, b) => a.Title.localeCompare(b.Title))
       } else {
-        console.log("desc?");
         sortedMovies = movies.sort((a, b) => b.Title.localeCompare(a.Title))
       }
     }
@@ -127,8 +114,8 @@ export default function HomeScreen() {
       placeholder={placeholder}
       value={value}
       onChange={onChange}
-      selectedTextStyle={{ fontSize: 14,}}
-      itemTextStyle={{ fontSize: 14,}}
+      selectedTextStyle={{ fontSize: 14, }}
+      itemTextStyle={{ fontSize: 14, }}
     />
   );
 
@@ -150,6 +137,15 @@ export default function HomeScreen() {
   const sortingMethod = ["ASC", "DESC"].map((item) => ({ label: item, value: item }));
   const sortingType = ["Year", "Title"].map((item) => ({ label: item, value: item }));
 
+  function emptyListMessage() {
+
+    if (search != "" && movies.length == 0) {
+      return "No results";
+    } else if (search == "" && movies.length == 0) {
+      return "Search movies";
+    }
+  }
+
   return (
     <View style={{ marginTop: 50, marginHorizontal: 20 }}>
       <View style={[styles.searchRow, { justifyContent: "space-between", }]}>
@@ -168,7 +164,7 @@ export default function HomeScreen() {
       </View>
       <View style={styles.filterRow}>
         <FilterDropdown
-          data={years} 
+          data={years}
           placeholder="Year"
           value={selectedYear}
           onChange={(item) => { onUpdateYear(item) }}
@@ -185,6 +181,9 @@ export default function HomeScreen() {
           value={sortType}
           onChange={(item) => { onSortList(selectedSortingMethod, item.value) }}
         />
+      </View>
+      <View style={{ justifyContent: "center", alignItems: "center", height: 200 }}>
+        {!loading? <Text style={[styles.title, { color: "#c9c9c9" }]}>{emptyListMessage()}</Text> : null}
       </View>
       <FlatList
         data={movies}

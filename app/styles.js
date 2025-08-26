@@ -77,6 +77,11 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#fff",
   },
+  detailsContainer: {
+    padding: 20,
+    flexGrow: 1,
+    alignItems: 'center',
+  },
   center: {
     flex: 1,
     justifyContent: "center",
@@ -86,6 +91,14 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "bold",
     marginBottom: 15,
+  },
+  detailsImage: {
+    height: 400,
+    justifyContent: "flex-end",
+  },
+    detailsOverlay: {
+    backgroundColor: "rgba(0,0,0,0.4)",
+    padding: 20,
   },
   item: {
     flex: 1,

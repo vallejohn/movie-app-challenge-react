@@ -3,15 +3,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { ImageBackground } from "expo-image";
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import { addFavorite, initDb, isMarkedFavorite, removeFavorite } from '../_database';
 import MovieDetails from "../models/movieDetails";
 const { width } = Dimensions.get("window");
 
-import Constants from "expo-constants";
-const { omdbApiKey } = Constants.expoConfig?.extra ?? {};
-
-const API_KEY = omdbApiKey;
+import { onRequestDetails } from "../apiClient";
+import styles from "../styles";
 
 export default function DetailsScreen() {
   const { movieId } = useLocalSearchParams();
@@ -23,23 +21,17 @@ export default function DetailsScreen() {
 
   const fetchMoviesDetails = async (id: string) => {
     setLoading(true);
+    let requestData = await onRequestDetails(id);
 
-    try {
-      const response = await fetch(`https://www.omdbapi.com/?i=${id}&apikey=${API_KEY}`);
-      const data: MovieDetails & { Response: string; Error?: string } = await response.json();
-      if (data.Response === 'True') {
-        setMovie(data);
-        let markedFavorite = await isMarkedFavorite(data.imdbID);
-
-        if (markedFavorite) {
+    if(requestData){
+      setMovie(requestData);
+      let markedFavorite = await isMarkedFavorite(requestData.imdbID);
+      if (markedFavorite) {
           setIsFavorite(true);
         }
-      }
-    } catch (err) {
-      setLoading(false);
-    } finally {
-      setLoading(false);
     }
+
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -88,21 +80,21 @@ export default function DetailsScreen() {
   );
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {loading && <ActivityIndicator size="large" color="#0000ff" />}
+    <ScrollView contentContainerStyle={styles.detailsContainer}>
+      {loading && <ActivityIndicator size="large" color="#0000ff" style={{alignSelf: "center"}}/>}
 
       {movie && (
         <View>
           <ImageBackground
             source={{ uri: movie.Poster }}
-            style={[styles.image, { width }]}
+            style={[styles.detailsImage, { width }]}
           >
             <View style={{ marginHorizontal: 20, marginVertical: 10, alignSelf: "flex-end" }}>
               <TouchableOpacity style={styles.row} onPress={toggleFavorite}>
                 <Ionicons name="heart" size={40} color={isFavorite ? "red" : "white"} />
               </TouchableOpacity>
             </View>
-            <View style={styles.overlay}>
+            <View style={styles.detailsOverlay}>
               <Text style={styles.textTitle}>{movie.Title}</Text>
               <Text style={styles.textSubTitle}>{movie.Year}</Text>
             </View>
@@ -132,66 +124,3 @@ export default function DetailsScreen() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-  },
-  image: {
-    height: 400,
-    justifyContent: "flex-end",
-  },
-  overlay: {
-    backgroundColor: "rgba(0,0,0,0.4)",
-    padding: 20,
-  },
-  textTitle: {
-    color: "white",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  textSubTitle: {
-    color: "white",
-    fontSize: 14,
-  },
-  container: {
-    padding: 20,
-    flexGrow: 1,
-    alignItems: 'center',
-  },
-  favoritedIcon: {
-    backgroundColor: "#007AFF",
-    padding: 12,
-    borderRadius: 50,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  favoritedIconDefault: {
-    padding: 12,
-    borderRadius: 50,
-    alignItems: "center",
-    justifyContent: "center",
-    outlineColor: "#007AFF",
-    outlineWidth: 1.3
-  },
-  error: {
-    color: 'red',
-    marginVertical: 10,
-  },
-  movieContainer: {
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  poster: {
-    width: 200,
-    height: 300,
-    resizeMode: 'cover',
-    marginBottom: 10,
-  },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    textAlign: 'center',
-  },
-});

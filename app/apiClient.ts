@@ -1,4 +1,5 @@
 import Constants from "expo-constants";
+import MovieDetails from "./models/movieDetails";
 import OmdbResponse from "./models/omdbResponse";
 const { omdbApiKey } = Constants.expoConfig?.extra ?? {};
 
@@ -12,18 +13,32 @@ export async function onRequestMovieList(searchValue: string, year: number, page
         yearParam = `&y=${year}`;
     }
 
-  try {
-    const response = await fetch(
-      `http://www.omdbapi.com/?s=${searchValue}${yearParam}&page=${pageNumber}&apikey=${API_KEY}`
-    );
-    const data: OmdbResponse = await response.json();
+    try {
+        const response = await fetch(
+            `http://www.omdbapi.com/?s=${searchValue}${yearParam}&page=${pageNumber}&apikey=${API_KEY}`
+        );
+        const data: OmdbResponse = await response.json();
 
-    if (data.Response === "True" && data.Search) {
-      return data;
-    } else {
-      return null;
+        if (data.Response === "True" && data.Search) {
+            return data;
+        } else {
+            return null;
+        }
+    } catch (error) {
+        return null;
     }
-  } catch (error) {
-    return null;
-  }
+}
+
+export async function onRequestDetails(id: string): Promise<MovieDetails | null> {
+    try {
+        const response = await fetch(`https://www.omdbapi.com/?i=${id}&apikey=${API_KEY}`);
+        const data: MovieDetails & { Response: string; Error?: string } = await response.json();
+        if (data.Response === 'True') {
+            return data;
+        } else {
+            return null;
+        }
+    } catch (err) {
+        return null;
+    }
 }
