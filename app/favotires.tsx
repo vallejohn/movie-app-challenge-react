@@ -4,26 +4,12 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TextInput, View } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 import { getFavorites } from "./_database";
+import { Movie } from "./models/movie";
 
 const Stack = createNativeStackNavigator();
 
 const API_KEY = "b9bd48a6";
 const SEARCH_TERM = "batman";
-
-interface Movie {
-  imdbID: string;
-  Title: string;
-  Year: string;
-  Type: string;
-  Poster: string;
-}
-
-interface OmdbResponse {
-  Search?: Movie[];
-  totalResults?: string;
-  Response: string;
-}
-
 
 export default function FavoritesScreen() {
   return (
