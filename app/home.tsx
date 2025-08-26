@@ -138,11 +138,12 @@ export default function HomeScreen() {
   const sortingType = ["Year", "Title"].map((item) => ({ label: item, value: item }));
 
   function emptyListMessage() {
-
     if (search != "" && movies.length == 0) {
       return "No results";
     } else if (search == "" && movies.length == 0) {
       return "Search movies";
+    }else{
+      return "";
     }
   }
 
@@ -182,16 +183,16 @@ export default function HomeScreen() {
           onChange={(item) => { onSortList(selectedSortingMethod, item.value) }}
         />
       </View>
-      <View style={{ justifyContent: "center", alignItems: "center", height: 200 }}>
-        {!loading? <Text style={[styles.title, { color: "#c9c9c9" }]}>{emptyListMessage()}</Text> : null}
-      </View>
+      {!loading && movies.length == 0? <View style={{ justifyContent: "center", alignItems: "center", height: 200 }}>
+        <Text style={[styles.title, { color: "#c9c9c9" }]}>{emptyListMessage()}</Text>
+      </View> : null}
       <FlatList
         data={movies}
         numColumns={3}
         keyExtractor={(item) => item.imdbID}
         renderItem={renderItem}
         onEndReached={loadMore}
-        onEndReachedThreshold={0.5}
+        onEndReachedThreshold={1}
         ListEmptyComponent={
           loading ? <ActivityIndicator size="large" /> : null
         }
