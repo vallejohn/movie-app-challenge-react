@@ -1,21 +1,29 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, FlatList, Text, TextInput, TouchableOpacity, View } from "react-native";
-import Movie from "./models/movie";
-import OmdbResponse from "./models/omdbResponse";
-
-import Constants from "expo-constants";
 import { ImageBackground } from "expo-image";
 import { router } from "expo-router";
-import { Dropdown } from "react-native-element-dropdown";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, FlatList, Text, TouchableOpacity, View } from "react-native";
+import { getFavorites } from "./_database";
+import Movie from "./models/movie";
 import styles from "./styles";
-const { omdbApiKey } = Constants.expoConfig?.extra ?? {};
 
 const Stack = createNativeStackNavigator();
 
-const API_KEY = omdbApiKey;
+const API_KEY = "b9bd48a6";
+const SEARCH_TERM = "batman";
 
-export default function HomeScreen() {
+export default function FavoritesScreen() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="Favorites"
+        component={Body}
+      />
+    </Stack.Navigator>
+  );
+}
+
+function Body() {
   const currentYear = new Date().getFullYear();
   const years = Array.from(new Array(50), (val, index) => ({
     label: (currentYear - index).toString(),
@@ -24,7 +32,7 @@ export default function HomeScreen() {
 
   const [movies, setMovies] = useState<Movie[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState("batman");
   const [page, setPage] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
   const [selectedYear, setYear] = useState(null);
@@ -32,44 +40,33 @@ export default function HomeScreen() {
   const [sortType, setSortType] = useState("Title");
 
 
-  const fetchMovies = (query: string, year: any, pageNumber: number) => {
-    setLoading(true);
+  const fetchMovies = async (query: string, year: any, pageNumber: number) => {
+    console.log('fetching movies:::', pageNumber)
+    if (!query) return;
 
-    if (!query && year == 0) return;
+    setLoading(true);
 
     var yearParam = ``;
     if (year != null || year != 0) {
       yearParam = `&y=${year}`;
     }
 
-    fetch(`http://www.omdbapi.com/?s=${query}${yearParam}&page=${pageNumber}&apikey=${API_KEY}`)
-      .then((response) => response.json())
-      .then((data: OmdbResponse) => {
-        if (data.Response === "True" && data.Search) {
-          if (pageNumber == 1) {
-            const uniqueMovies = Array.from(
-              new Map(data.Search.map((movie) => [movie.imdbID, movie])).values()
-            );
-            setMovies(uniqueMovies)
-          } else {
-            const newMovies = Array.from(
-              new Map(data.Search.map((movie) => [movie.imdbID, movie])).values()
-            );
+    setLoading(true);
 
-            setMovies(movies => [...movies, ...newMovies])
+    let savedMoviesRaw = await getFavorites();
+    console.log('saved favorites', savedMoviesRaw);
 
-          }
-          setTotalResults(Number(data.totalResults) || 0);
-        } else if (pageNumber === 1) {
-          setMovies([]);
-          setTotalResults(0)
-        }
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error(error);
-        setLoading(false);
-      });
+    let savedMovies: Movie[] = savedMoviesRaw.map((item: any) => ({
+      imdbID: item.imdbID,
+      Year: item.Year,
+      Poster: item.Poster,
+      Title: item.Title,
+      Type: item.Type
+    }));
+
+    setMovies(savedMovies);
+    setLoading(false);
+
   };
 
   useEffect(() => {
@@ -78,7 +75,6 @@ export default function HomeScreen() {
         setPage(1)
         fetchMovies(search, selectedYear, 1);
       } else {
-        setLoading(false)
         setMovies([])
       }
     }, 500)
@@ -89,6 +85,11 @@ export default function HomeScreen() {
   }, [search]);
 
   const loadMore = () => {
+    console.log('loading more:::');
+    console.log('movie length: ', movies.length);
+    console.log('total results: ', totalResults);
+    console.log('loading: ', loading);
+
     if (movies.length < totalResults && !loading) {
       const nextPage = page + 1;
       setPage(nextPage);
@@ -97,6 +98,7 @@ export default function HomeScreen() {
   };
 
   const onUpdateYear = (item: any) => {
+    console.log("Year is updated", item)
     setYear(item.value)
     setPage(1);
     fetchMovies(search, item.value, 1)
@@ -131,7 +133,7 @@ export default function HomeScreen() {
     <TouchableOpacity style={styles.item} onPress={() => router.push(`/details/${item.imdbID}`)}>
       <ImageBackground
         source={{ uri: item.Poster }}
-        style={[styles.item, {margin: 0}]}
+        style={[styles.item, { margin: 0 }]}
         imageStyle={{ borderRadius: 10 }}
       >
         <View style={styles.overlay}>
@@ -144,49 +146,6 @@ export default function HomeScreen() {
 
   return (
     <View style={{ marginTop: 50, marginHorizontal: 20 }}>
-      <View style={[styles.searchRow, { justifyContent: "space-between", }]}>
-        <Text style={styles.title}>Movie Database</Text>
-        <TouchableOpacity onPress={() => router.push('/favorites')}>
-          <Text style={{ color: "#007AFF", fontSize: 16 }}>Favorites</Text>
-        </TouchableOpacity>
-      </View>
-      <View style={[styles.searchRow, styles.verticalSpacingMedium]}>
-        <TextInput
-          style={styles.input}
-          value={search}
-          onChangeText={setSearch}
-          placeholder="Search movies..."
-        />
-      </View>
-      <View style={styles.filterRow}>
-        <Dropdown
-          style={styles.dropdown}
-          data={years}
-          labelField="label"
-          valueField="value"
-          placeholder="Select year"
-          value={selectedYear}
-          onChange={(item) => { onUpdateYear(item) }}
-        />
-        <Dropdown
-          style={styles.dropdown}
-          data={["ASC", "DESC"]}
-          labelField="label"
-          valueField="value"
-          placeholder="Sort"
-          value={selectedSortingMethod}
-          onChange={(item) => { onSortList(item, sortType) }}
-        />
-        <Dropdown
-          style={styles.dropdown}
-          data={["Year", "Title"]}
-          labelField="label"
-          valueField="value"
-          placeholder="Type"
-          value={sortType}
-          onChange={(item) => { onSortList(selectedSortingMethod, item) }}
-        />
-      </View>
       <FlatList
         data={movies}
         numColumns={3}
@@ -201,4 +160,3 @@ export default function HomeScreen() {
     </View>
   );
 }
-
