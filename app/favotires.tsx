@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TextInput, View } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 import { getFavorites } from "./_database";
-import { Movie } from "./models/movie";
+import Movie from "./models/movie";
 
 const Stack = createNativeStackNavigator();
 

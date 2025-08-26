@@ -1,6 +1,7 @@
-import { Movie } from "./movie";
+import Movie from "./movie";
 
-export interface OmdbResponse {
+
+export default interface OmdbResponse {
   Search?: Movie[];
   totalResults?: string;
   Response: string;

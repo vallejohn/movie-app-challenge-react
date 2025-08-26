@@ -1,4 +1,4 @@
-export interface MovieDetails{
+export default interface MovieDetails{
   Title: string;
   Year: string;
   Rated: string;

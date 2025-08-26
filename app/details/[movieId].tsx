@@ -4,7 +4,7 @@ import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { addFavorite, initDb, isMarkedFavorite, removeFavorite } from '../_database';
-import { MovieDetails } from "../models/movieDetails";
+import MovieDetails from "../models/_movieDetails";
 
 const API_KEY = "b9bd48a6";
 
