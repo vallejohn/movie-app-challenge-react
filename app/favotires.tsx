@@ -1,8 +1,9 @@
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { Link, useRouter } from 'expo-router';
+import { Link } from 'expo-router';
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Button, FlatList, Image, StyleSheet, Text, TextInput, View, } from "react-native";
+import { ActivityIndicator, FlatList, Image, StyleSheet, Text, TextInput, View } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
+import { getFavorites } from "./_database";
 
 const Stack = createNativeStackNavigator();
 
@@ -24,24 +25,12 @@ interface OmdbResponse {
 }
 
 
-export default function HomeScreen() {
-const router = useRouter();
-
+export default function FavoritesScreen() {
   return (
       <Stack.Navigator>
         <Stack.Screen 
-          name="Home" 
+          name="Favorites" 
           component={Body}
-          options={{
-            title: "Movie Database",
-            headerRight: () => (
-              <Button 
-                onPress={() => router.push('/favotires')} 
-                title="View favotires" 
-                color="#007AFF"
-              />
-            ),
-          }}
         />
       </Stack.Navigator>
   );
@@ -64,7 +53,7 @@ function Body() {
   const [sortType, setSortType] = useState("Title");
   
 
-  const fetchMovies = (query: string, year: any, pageNumber: number) => {
+  const fetchMovies = async (query: string, year: any, pageNumber: number) => {
     console.log('fetching movies:::', pageNumber)
     if (!query) return;
 
@@ -74,38 +63,23 @@ function Body() {
     if(year != null || year != 0){
       yearParam = `&y=${year}`;
     }
- 
-    fetch(`http://www.omdbapi.com/?s=${query}${yearParam}&page=${pageNumber}&apikey=${API_KEY}`)
-      .then((response) => response.json())
-      .then((data: OmdbResponse) => {
-        if (data.Response === "True" && data.Search) {
-          if(pageNumber == 1){
-                      const uniqueMovies = Array.from(
-            new Map(data.Search.map((movie) => [movie.imdbID, movie])).values()
-          );
-            setMovies(uniqueMovies)
-          }else{
-            console.log('results:::', data.Search.length)
-            const newMovies = Array.from(
-              new Map(data.Search.map((movie) => [movie.imdbID, movie])).values()
-            );
 
-             setMovies(movies => [...movies, ...newMovies])
+    setLoading(true);
 
-             console.log("total movies stored: ", movies.length);
+    let savedMoviesRaw = await getFavorites();
+    console.log('saved favorites', savedMoviesRaw);
 
-          }
-          setTotalResults(Number(data.totalResults) || 0);
-        } else if (pageNumber === 1) {
-          setMovies([]);
-          setTotalResults(0)
-        }
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error(error);
-        setLoading(false);
-      });
+    let savedMovies: Movie[] = savedMoviesRaw.map((item: any) => ({
+      imdbID: item.imdbID,
+      Year: item.Year,
+      Poster: item.Poster,
+      Title: item.Title,
+      Type: item.Type
+    }));
+
+    setMovies(savedMovies);
+    setLoading(false);
+  
   };
 
   useEffect(() => {
