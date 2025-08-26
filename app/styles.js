@@ -13,11 +13,11 @@ const styles = StyleSheet.create({
   },
   dropdown: {
     height: 40,
-    borderColor: "#ccc",
-    borderWidth: 1,
+    backgroundColor: "#dbdbdb",
     borderRadius: 8,
     marginBottom: 10,
     paddingHorizontal: 8,
+    fontSize: 10,
     flex: 1,
   },
   overlay: {
@@ -111,6 +111,66 @@ const styles = StyleSheet.create({
     width: 40,
     height: 60,
     borderRadius: 6,
+  },
+  row: {
+    flexDirection: "row",
+  },
+  image: {
+    height: 400,
+    justifyContent: "flex-end",
+  },
+  overlay: {
+    backgroundColor: "rgba(0,0,0,0.4)",
+    padding: 20,
+  },
+  textTitle: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  textSubTitle: {
+    color: "white",
+    fontSize: 14,
+  },
+  container: {
+    padding: 20,
+    flexGrow: 1,
+    alignItems: 'center',
+  },
+  favoritedIcon: {
+    backgroundColor: "#007AFF",
+    padding: 12,
+    borderRadius: 50,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  favoritedIconDefault: {
+    padding: 12,
+    borderRadius: 50,
+    alignItems: "center",
+    justifyContent: "center",
+    outlineColor: "#007AFF",
+    outlineWidth: 1.3
+  },
+  error: {
+    color: 'red',
+    marginVertical: 10,
+  },
+  movieContainer: {
+    marginTop: 20,
+    alignItems: 'center',
+  },
+  poster: {
+    width: 200,
+    height: 300,
+    resizeMode: 'cover',
+    marginBottom: 10,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
   },
 });
 

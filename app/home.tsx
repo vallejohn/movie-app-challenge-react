@@ -2,12 +2,12 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, FlatList, Text, TextInput, TouchableOpacity, View } from "react-native";
 import Movie from "./models/movie";
-import OmdbResponse from "./models/omdbResponse";
 
 import Constants from "expo-constants";
 import { ImageBackground } from "expo-image";
 import { router } from "expo-router";
 import { Dropdown } from "react-native-element-dropdown";
+import { onRequestMovieList } from "./apiClient";
 import styles from "./styles";
 const { omdbApiKey } = Constants.expoConfig?.extra ?? {};
 
@@ -32,44 +32,27 @@ export default function HomeScreen() {
   const [sortType, setSortType] = useState("Title");
 
 
-  const fetchMovies = (query: string, year: any, pageNumber: number) => {
+  const fetchMovies = async (query: string, year: any, pageNumber: number) => {
     setLoading(true);
 
-    if (!query && year == 0) return;
+    let responseData = await onRequestMovieList(query, year, pageNumber);
+    console.log('API Response', responseData);
 
-    var yearParam = ``;
-    if (year != null || year != 0) {
-      yearParam = `&y=${year}`;
+    if (!responseData) {
+      setMovies([]);
+      setTotalResults(0);
+    } else {
+      const responseMovies = Array.from(
+        new Map(responseData.Search?.map((movie) => [movie.imdbID, movie])).values()
+      );
+      if (pageNumber == 1) {
+        setMovies(responseMovies);
+      } else {
+        setMovies(movies => [...movies, ...responseMovies]);
+      }
+      setTotalResults(Number(responseData.totalResults) || 0);
     }
-
-    fetch(`http://www.omdbapi.com/?s=${query}${yearParam}&page=${pageNumber}&apikey=${API_KEY}`)
-      .then((response) => response.json())
-      .then((data: OmdbResponse) => {
-        if (data.Response === "True" && data.Search) {
-          if (pageNumber == 1) {
-            const uniqueMovies = Array.from(
-              new Map(data.Search.map((movie) => [movie.imdbID, movie])).values()
-            );
-            setMovies(uniqueMovies)
-          } else {
-            const newMovies = Array.from(
-              new Map(data.Search.map((movie) => [movie.imdbID, movie])).values()
-            );
-
-            setMovies(movies => [...movies, ...newMovies])
-
-          }
-          setTotalResults(Number(data.totalResults) || 0);
-        } else if (pageNumber === 1) {
-          setMovies([]);
-          setTotalResults(0)
-        }
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error(error);
-        setLoading(false);
-      });
+    setLoading(false);
   };
 
   useEffect(() => {
@@ -103,35 +86,57 @@ export default function HomeScreen() {
   }
 
   const onSortList = (method: string, type: string) => {
+    console.log("sorting", method);
+        console.log("type", type);
     setSortType(type);
     setSelectedSortingMethod(method);
 
     let sortedMovies: Movie[] = [];
 
     if (type == "Year") {
+      console.log("year?");
       if (method == "ASC") {
+        console.log("asc?");
         sortedMovies = movies.sort((a, b) => parseInt(a.Year) - parseInt(b.Year))
       } else {
+        console.log("desc");
         sortedMovies = movies.sort((a, b) => parseInt(b.Year) - parseInt(a.Year))
       }
     }
 
     if (type == "Title") {
+      console.log("title?");
       if (method == "ASC") {
-        sortedMovies = movies.sort((a, b) => parseInt(a.Title) - parseInt(b.Title))
+        console.log("asc?");
+        sortedMovies = movies.sort((a, b) => a.Title.localeCompare(b.Title))
       } else {
-        sortedMovies = movies.sort((a, b) => parseInt(b.Title) - parseInt(a.Title))
+        console.log("desc?");
+        sortedMovies = movies.sort((a, b) => b.Title.localeCompare(a.Title))
       }
     }
 
     setMovies(sortedMovies);
   }
 
+  const FilterDropdown = ({ data, placeholder, value, onChange }: { data: any, placeholder: string, value: any, onChange: (item: any) => void }) => (
+    <Dropdown
+      style={styles.dropdown}
+      data={data}
+      labelField="label"
+      valueField="value"
+      placeholder={placeholder}
+      value={value}
+      onChange={onChange}
+      selectedTextStyle={{ fontSize: 14,}}
+      itemTextStyle={{ fontSize: 14,}}
+    />
+  );
+
   const renderItem = ({ item }: { item: Movie }) => (
     <TouchableOpacity style={styles.item} onPress={() => router.push(`/details/${item.imdbID}`)}>
       <ImageBackground
         source={{ uri: item.Poster }}
-        style={[styles.item, {margin: 0}]}
+        style={[styles.item, { margin: 0 }]}
         imageStyle={{ borderRadius: 10 }}
       >
         <View style={styles.overlay}>
@@ -141,6 +146,9 @@ export default function HomeScreen() {
       </ImageBackground>
     </TouchableOpacity>
   );
+
+  const sortingMethod = ["ASC", "DESC"].map((item) => ({ label: item, value: item }));
+  const sortingType = ["Year", "Title"].map((item) => ({ label: item, value: item }));
 
   return (
     <View style={{ marginTop: 50, marginHorizontal: 20 }}>
@@ -159,32 +167,23 @@ export default function HomeScreen() {
         />
       </View>
       <View style={styles.filterRow}>
-        <Dropdown
-          style={styles.dropdown}
-          data={years}
-          labelField="label"
-          valueField="value"
-          placeholder="Select year"
+        <FilterDropdown
+          data={years} 
+          placeholder="Year"
           value={selectedYear}
           onChange={(item) => { onUpdateYear(item) }}
         />
-        <Dropdown
-          style={styles.dropdown}
-          data={["ASC", "DESC"]}
-          labelField="label"
-          valueField="value"
+        <FilterDropdown
+          data={sortingMethod}
           placeholder="Sort"
           value={selectedSortingMethod}
-          onChange={(item) => { onSortList(item, sortType) }}
+          onChange={(item) => { onSortList(item.value, sortType) }}
         />
-        <Dropdown
-          style={styles.dropdown}
-          data={["Year", "Title"]}
-          labelField="label"
-          valueField="value"
+        <FilterDropdown
+          data={sortingType}
           placeholder="Type"
           value={sortType}
-          onChange={(item) => { onSortList(selectedSortingMethod, item) }}
+          onChange={(item) => { onSortList(selectedSortingMethod, item.value) }}
         />
       </View>
       <FlatList

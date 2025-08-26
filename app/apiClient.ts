@@ -1,0 +1,29 @@
+import Constants from "expo-constants";
+import OmdbResponse from "./models/omdbResponse";
+const { omdbApiKey } = Constants.expoConfig?.extra ?? {};
+
+const API_KEY = omdbApiKey;
+
+export async function onRequestMovieList(searchValue: string, year: number, pageNumber: number): Promise<OmdbResponse | null> {
+    if (!searchValue && year == 0) return null;
+
+    let yearParam = ``;
+    if (year != null || year != 0) {
+        yearParam = `&y=${year}`;
+    }
+
+  try {
+    const response = await fetch(
+      `http://www.omdbapi.com/?s=${searchValue}${yearParam}&page=${pageNumber}&apikey=${API_KEY}`
+    );
+    const data: OmdbResponse = await response.json();
+
+    if (data.Response === "True" && data.Search) {
+      return data;
+    } else {
+      return null;
+    }
+  } catch (error) {
+    return null;
+  }
+}
