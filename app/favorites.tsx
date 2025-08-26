@@ -41,7 +41,6 @@ function Body() {
 
 
   const fetchMovies = async (query: string, year: any, pageNumber: number) => {
-    console.log('fetching movies:::', pageNumber)
     if (!query) return;
 
     setLoading(true);
@@ -54,7 +53,6 @@ function Body() {
     setLoading(true);
 
     let savedMoviesRaw = await getFavorites();
-    console.log('saved favorites', savedMoviesRaw);
 
     let savedMovies: Movie[] = savedMoviesRaw.map((item: any) => ({
       imdbID: item.imdbID,
@@ -85,11 +83,6 @@ function Body() {
   }, [search]);
 
   const loadMore = () => {
-    console.log('loading more:::');
-    console.log('movie length: ', movies.length);
-    console.log('total results: ', totalResults);
-    console.log('loading: ', loading);
-
     if (movies.length < totalResults && !loading) {
       const nextPage = page + 1;
       setPage(nextPage);
@@ -98,7 +91,6 @@ function Body() {
   };
 
   const onUpdateYear = (item: any) => {
-    console.log("Year is updated", item)
     setYear(item.value)
     setPage(1);
     fetchMovies(search, item.value, 1)
