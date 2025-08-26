@@ -3,12 +3,15 @@ import { Link, useRouter } from 'expo-router';
 import React, { useEffect, useState } from "react";
 import { ActivityIndicator, Button, FlatList, Image, StyleSheet, Text, TextInput, View, } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
-import OmdbResponse from "./models/_omdbResponse";
 import Movie from "./models/movie";
+import OmdbResponse from "./models/omdbResponse";
+
+import Constants from "expo-constants";
+const { omdbApiKey } = Constants.expoConfig?.extra ?? {};
 
 const Stack = createNativeStackNavigator();
 
-const API_KEY = "b9bd48a6";
+const API_KEY = omdbApiKey;
 const SEARCH_TERM = "batman";
 
 
