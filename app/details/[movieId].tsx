@@ -1,96 +1,151 @@
 
 import { Ionicons } from "@expo/vector-icons";
+import { ImageBackground } from "expo-image";
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from "react";
-import { ActivityIndicator, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { addFavorite, initDb, isMarkedFavorite, removeFavorite } from '../_database';
 import MovieDetails from "../models/movieDetails";
+const { width } = Dimensions.get("window");
 
-const API_KEY = "b9bd48a6";
+import Constants from "expo-constants";
+const { omdbApiKey } = Constants.expoConfig?.extra ?? {};
 
-export default function DetailsScreen(){
+const API_KEY = omdbApiKey;
+
+export default function DetailsScreen() {
   const { movieId } = useLocalSearchParams();
   const id = Array.isArray(movieId) ? movieId[0] : movieId;
-  console.log('the id is:', movieId);
-
-  console.log('path:::', `https://www.omdbapi.com/?i=${id}&apikey=${API_KEY}`);
 
   const [loading, setLoading] = useState(true);
   const [movie, setMovie] = useState<MovieDetails | null>(null);
   const [isFavorite, setIsFavorite] = useState(false);
 
-    const fetchMoviesDetails = async (id: string) => {
+  const fetchMoviesDetails = async (id: string) => {
     setLoading(true);
-    console.log('fetching::::::')
-  
-      try {
-        const response = await fetch(`https://www.omdbapi.com/?i=${id}&apikey=${API_KEY}`);
-        const data: MovieDetails & { Response: string; Error?: string } = await response.json();
-          console.log('fetching 1::::::')
-        if (data.Response === 'True') {
-          console.log('fetching 2::::::')
-          setMovie(data);
-          let markedFavorite = await isMarkedFavorite(data.imdbID);
 
-          console.log('marked favorite', markedFavorite);
+    try {
+      const response = await fetch(`https://www.omdbapi.com/?i=${id}&apikey=${API_KEY}`);
+      const data: MovieDetails & { Response: string; Error?: string } = await response.json();
+      if (data.Response === 'True') {
+        setMovie(data);
+        let markedFavorite = await isMarkedFavorite(data.imdbID);
 
-          if(markedFavorite){
-            setIsFavorite(true);
-          }
-        } 
-      } catch (err) {
-         setLoading(false);
-      } finally {
-        setLoading(false);
+        if (markedFavorite) {
+          setIsFavorite(true);
+        }
       }
+    } catch (err) {
+      setLoading(false);
+    } finally {
+      setLoading(false);
+    }
   };
 
-    useEffect(() => {
-      const setup = async () => {
-        await initDb();
-        fetchMoviesDetails(id)
-      }
+  useEffect(() => {
+    const setup = async () => {
+      await initDb();
+      fetchMoviesDetails(id)
+    }
 
-      setup();
-    }, [id]);
+    setup();
+  }, [id]);
 
-    const toggleFavorite = async () => {
-      if (!movie) return;
+  const toggleFavorite = async () => {
+    if (!movie) return;
 
-      if (isFavorite) {
-        await removeFavorite(movie.imdbID);
-      } else {
-        await addFavorite(movie.imdbID, movie);
-      }
-      setIsFavorite(!isFavorite);
-    };
+    if (isFavorite) {
+      await removeFavorite(movie.imdbID);
+    } else {
+      await addFavorite(movie.imdbID, movie);
+    }
+    setIsFavorite(!isFavorite);
+  };
 
-    return (
+  const MovieStats = ({ label, value }: { label: string, value: string }) => (
+    <View style={{
+      alignItems: "center"
+    }}>
+      <Text style={{ fontSize: 12 }}>{label}</Text>
+      <Text style={{ fontWeight: "bold", fontSize: 16 }}>{value}</Text>
+    </View>
+  );
+
+  const MovieCast = ({ label, value }: { label: string, value: string }) => (
+    <View style={{
+      alignItems: "flex-start",
+      marginHorizontal: 20,
+    }}>
+      <Text style={{ fontSize: 12, color: "grey" }}>{label}</Text>
+      <Text style={{ fontSize: 14 }}>{value}</Text>
+    </View>
+  );
+
+  return (
     <ScrollView contentContainerStyle={styles.container}>
       {loading && <ActivityIndicator size="large" color="#0000ff" />}
 
       {movie && (
-        <View style={styles.movieContainer}>
-          {movie.Poster !== 'N/A' && <Image source={{ uri: movie.Poster }} style={styles.poster} />}
-          <Text style={styles.title}>{movie.Title}</Text>
-          <TouchableOpacity style={isFavorite? styles.favoritedIcon : styles.favoritedIconDefault} onPress={toggleFavorite}>
-            <Ionicons name="heart" size={28} color={isFavorite? "white" : "#007AFF"} />
-          </TouchableOpacity>
-          <Text>Year: {movie.Year}</Text>
-          <Text>Rated: {movie.Rated}</Text>
-          <Text>Genre: {movie.Genre}</Text>
-          <Text>Director: {movie.Director}</Text>
-          <Text>Actors: {movie.Actors}</Text>
-          <Text>Plot: {movie.Plot}</Text>
+        <View>
+          <ImageBackground
+            source={{ uri: movie.Poster }}
+            style={[styles.image, { width }]}
+          >
+            <View style={{ marginHorizontal: 20, marginVertical: 10, alignSelf: "flex-end" }}>
+              <TouchableOpacity style={styles.row} onPress={toggleFavorite}>
+                <Ionicons name="heart" size={40} color={isFavorite ? "red" : "white"} />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.overlay}>
+              <Text style={styles.textTitle}>{movie.Title}</Text>
+              <Text style={styles.textSubTitle}>{movie.Year}</Text>
+            </View>
+          </ImageBackground>
+          <View style={{ marginVertical: 10, marginHorizontal: 20 }}>
+            <Text style={[styles.textSubTitle, { color: "grey", }]}>{movie.Genre}  •  {movie.Runtime}</Text>
+            <Text style={[styles.textTitle, { color: "black", marginTop: 20, }]}>Plot Sumary</Text>
+            <Text style={[styles.textSubTitle, { color: "black", marginTop: 10 }]}>{movie.Plot}</Text>
+          </View>
+          <View style={{
+            marginHorizontal: 50,
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: 10,
+          }}>
+            <MovieStats label="Score" value={movie.Metascore} />
+            <MovieStats label="Rating" value={movie.imdbRating} />
+            <MovieStats label="Votes" value={movie.imdbVotes} />
+          </View>
+          <MovieCast label="Director" value={movie.Director}></MovieCast>
+          <MovieCast label="Cast" value={movie.Actors}></MovieCast>
         </View>
       )}
     </ScrollView>
   );
 }
 
-
-
 const styles = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+  },
+  image: {
+    height: 400,
+    justifyContent: "flex-end",
+  },
+  overlay: {
+    backgroundColor: "rgba(0,0,0,0.4)",
+    padding: 20,
+  },
+  textTitle: {
+    color: "white",
+    fontSize: 18,
+    fontWeight: "bold",
+  },
+  textSubTitle: {
+    color: "white",
+    fontSize: 14,
+  },
   container: {
     padding: 20,
     flexGrow: 1,
