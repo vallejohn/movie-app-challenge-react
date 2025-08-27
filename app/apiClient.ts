@@ -8,8 +8,6 @@ const API_KEY = omdbApiKey;
 export async function onRequestMovieList(searchValue: string, year: number, type: string, pageNumber: number): Promise<OmdbResponse | null> {
     if (!searchValue && year == 0) return null;
 
-    console.log("tyoes", type);
-
     let yearParam = ``;
     if (year != null || year != 0) {
         yearParam = `&y=${year}`;
